@@ -497,27 +497,32 @@ var mem = {
 		path = (path.length===0?(item.name):(path+"/"+item.name));
 		// folder
 		if (item.isDirectory){
-			ll("found folder : "+path);this.scanFolderPendingC++;
-			item.createReader().readEntries(entryA=>{
-				ll("opened folder : "+path);this.scanFolderPendingC--;
-				if (entryA.length === 0){this.scanEndpointFxn();}
-				entryA.forEach(entry=>{
-					this.scan(entry,path,root);});});}
+			var reader = item.createReader();
+			ll("opening(step1/1) folder : "+path);this.scanFolderPendingC++;
+			reader.readEntries(entryA=>{this.scanHelper1(this,entryA,reader,item,path,root,false);});}
 		// single file
 		else if (item.isFile){
-			ll("found file : "+path);this.scanFilePendingC++;
+			ll("opening(step1/2) file : "+path);this.scanFilePendingC++;
 			root.getFile(item.fullPath,{},fileEntry=>{
-				ll("opened-A file : "+path);
+				ll("opening(step2/2) file : "+path);
 				fileEntry.file(file=>{
 					// fail-fast-ish : not image
 					if (["image/jpeg","image/png","image/gif"].includes(file.type)){
 						var e = {file,path,pathEnd:item.name};
 						mem.fileEA_possible.push(e);}
-					ll("opened-B file : "+path);this.scanFilePendingC--;this.scanEndpointFxn();
+					ll("opened file : "+path);this.scanFilePendingC--;this.scanEndpointFxn();
 					});});}
 		// this case ~can~ occur
 		else{
 			ll("found unknown : "+path);}},
+	scanHelper1 : (that,entryA,reader,item,path,root,continuationF)=>{
+		ll("opened folder"+(continuationF?" as continutation":" ")+" : "+path);that.scanFolderPendingC--;
+		if (entryA.length === 0){that.scanEndpointFxn();return;}
+		entryA.forEach(entry=>{
+			that.scan(entry,path,root);});
+		ll("opening(step1/1) folder as continuation : "+path);that.scanFolderPendingC++;
+		reader.readEntries(entryA=>{that.scanHelper1(that,entryA,reader,item,path,root,true);});
+		},
 };
 
 
@@ -563,6 +568,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 	elDropzone.addEventListener("drop",event=>{
 		event.preventDefault();
 		ll("drag&drop start");
+		ll("-----------------------------------------------------------------");
 		mem.fileEA_possible = [];
 		var itemL = event.dataTransfer.items;
 		if (typeof itemL === "undefined"){
