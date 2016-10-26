@@ -4,6 +4,7 @@ Google Chrome offline webpage for casually viewing folders of images.
 Required:  
 L> Web browser [currently only new-ish versions of Google Chrome]  
 L> A folder of many images [but intended for ≤10,000 images]  
+L> The .html file running on a server. You can currently find it here : [http://htmlpreview.github.io/?https://github.com/sliceofcake/ImageViewer/blob/master/folder.html](http://htmlpreview.github.io/?https://github.com/sliceofcake/ImageViewer/blob/master/folder.html). See one of the sections below for a reason why this has to be on a server.  
   
 Use case and reasoning  
 On my computer, I have a folder named "pixivRoot". Inside are many folders and one text file. The folders are named after pixiv artists, and the contents of those folders are drawings by the respective artist. I use an Apple laptop, so the "Shifting Tiles" screensaver is nice for casually viewing random images from my pixivRoot folder, but there aren't enough options for my liking. There also seems to be a randomization issue when using that screensaver with multiple monitors. I wanted to make a similar service, but change a few things for the better [in my opinion] and also offer many options to change how the service works.  
