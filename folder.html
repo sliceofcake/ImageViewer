@@ -256,21 +256,21 @@ var p = {
 		return elRow.children[this.calcOldestVisibleElI()];},
 	
 	play : function(){
-		// fail-fast : no images to serve
-		if (mem.fileEA_current.length === 0){
+		// fail-fast wait-loop : no images to serve
+		if (mem.fileEA_current.length < mem.bufferImgC){
 			mem.fillBuffer();
-			clearTimeout(this.timeoutO.main);this.timeoutO.main = setTimeout(()=>{
-				this.floodNewSet();
-				clearTimeout(this.timeoutO.main);this.timeoutO.main = setTimeout(()=>{this.play();},100);
-			},100);
+			clearTimeout(this.timeoutO.main);this.timeoutO.main = setTimeout(()=>{this.play();},100);
 			return;}
+		ll("******* "+mem.fileEA_current.length);
+		this.floodNewSet(true);
 		document.querySelector(".status-light").style.backgroundColor = "hsla(120,100%,40%,1)";
 		document.querySelector(".bottomish").style.display = "none";
 		document.querySelector(".reminder").innerHTML = p.reminderHi;
 		var elL = document.querySelectorAll(".path");for (var elLI = 0; elLI < elL.length; elLI++){var el = elL[elLI];el.style.display = "none";}
 		this.calcBottomPathEl().style.display = "none";
 		this.liveF = true;
-		this.tickMajor();},
+		// if we run tickMajor() immediately, it'll get logically grouped with floodNewSet(), so the first animation won't be observable
+		setTimeout(()=>{this.tickMajor();},100);},
 	pause : function(){
 		document.querySelector(".status-light").style.backgroundColor = "hsla(0,100%,40%,1)";
 		document.querySelector(".bottomish").style.display = "block";
@@ -285,10 +285,11 @@ var p = {
 			p.play();}},
 	
 	// destructively set up the amount of rows we need, blank, and immediately fill them in
-	floodNewSet : function(){ll("floodNewSet()");
+	floodNewSet : function(nondestructiveF=false){ll("floodNewSet("+nondestructiveF+")");
 		var rowCurr_FREEZE = this.rowCurr;
 		this.rowCurr = 0;
-		document.querySelector(".main").innerHTML = "";
+		if (!nondestructiveF){
+			document.querySelector(".main").innerHTML = "";}
 		do{
 			// ensure rows exist
 			var elRow = this.calcRowCurrEl();
@@ -300,6 +301,7 @@ var p = {
 				elRow.setAttribute("data-row",this.rowCurr.toString());
 				elRow.sliceofcake = {translateX:0};
 				document.querySelector(".main").appendChild(elRow);
+				ll("this.rowCurr : "+this.rowCurr);
 				if (mem.fileEA_current.length >= 1){this.shiftFill();}} // initial push
 			this.rowAdvance();}while (this.rowCurr !== 0);
 		this.rowCurr = rowCurr_FREEZE;},
@@ -349,12 +351,8 @@ var p = {
 			+π.a(0,this.rowC-1 ).map(n   =>".row"+n+">.img{float:"+(n%2===0?"left":"right")+";}").join("")
 			+π.a(1,this.unitMax).map(unit=>".w"+unit+"{width:" +this.widthBlockToPx (unit,true)+"px;}").join("")
 			+π.a(1,           1).map(unit=>".h"+unit+"{height:"+this.heightBlockToPx(unit)+"px;}").join("");}},
-	tickMajor : function(){ll("tickMajor()");
+	tickMajor : function(){ll("tickMajor() w/this.rowCurr : "+this.rowCurr);
 		if (!this.liveF){return;}
-		// loop-wait until we have images to work with
-		if (mem.fileEA_current.length === 0){
-			clearTimeout(this.timeoutO.main);this.timeoutO.main = setTimeout(()=>{this.floodNewSet();this.tickMajor();},this.tickMajorDeltaT/1000);
-			return;}
 		this.shiftFill();
 		this.rowAdvance();
 		clearTimeout(this.timeoutO.main);this.timeoutO.main = setTimeout(()=>{this.tickMajor();},this.tickMajorDeltaT/1000);},
